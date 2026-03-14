@@ -1,0 +1,17 @@
+# ============================================================
+# render.yaml — Render.com deployment config
+# Put this file in the ROOT of your backend folder
+# ============================================================
+services:
+  - type: web
+    name: impostor-x-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGO_URI
+        sync: false          # You'll paste this in Render dashboard
+      - key: FRONTEND_URL
+        sync: false          # Your Vercel URL goes here
+      - key: PORT
+        value: 5000
