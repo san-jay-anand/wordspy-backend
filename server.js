@@ -37,7 +37,12 @@ app.use(express.json());
 app.set("io", io);
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/impostor_word_game";
-mongoose.connect(MONGO_URI)
+mongoose.connect(MONGO_URI, {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  bufferCommands: false,
+  maxPoolSize: 10,
+})
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB:", err));
 

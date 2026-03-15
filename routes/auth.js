@@ -4,6 +4,7 @@ const router  = express.Router();
 const jwt     = require("jsonwebtoken");
 const User    = require("../models/User");
 const auth    = require("../middleware/auth");
+const connectDB = require("../lib/mongodb");
 
 const JWT_SECRET = process.env.JWT_SECRET || "wordspy_secret_key_change_in_production";
 
@@ -14,6 +15,7 @@ function generateToken(userId) {
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
   try {
+    await connectDB();
     const { username, password } = req.body;
     if (!username || !password)
       return res.status(400).json({ error: "Username and password required" });
@@ -50,6 +52,7 @@ router.post("/register", async (req, res) => {
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
+    await connectDB();
     const { username, password } = req.body;
     if (!username || !password)
       return res.status(400).json({ error: "Username and password required" });
@@ -83,6 +86,7 @@ router.post("/login", async (req, res) => {
 // GET /api/auth/profile — get current user profile
 router.get("/profile", auth, async (req, res) => {
   try {
+    await connectDB();
     res.json({ success: true, user: req.user });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -92,6 +96,7 @@ router.get("/profile", auth, async (req, res) => {
 // GET /api/auth/leaderboard — top 20 players
 router.get("/leaderboard", async (req, res) => {
   try {
+    await connectDB();
     const players = await User.find()
       .select("username totalScore gamesPlayed gamesWon crewmateWins impostorWins")
       .sort({ totalScore: -1 })
@@ -105,6 +110,7 @@ router.get("/leaderboard", async (req, res) => {
 // POST /api/auth/update-stats — called after each game ends
 router.post("/update-stats", auth, async (req, res) => {
   try {
+    await connectDB();
     const { scoreEarned, won, role } = req.body;
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ error: "User not found" });

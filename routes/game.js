@@ -2,6 +2,7 @@ const express = require("express");
 const router  = express.Router();
 const Game    = require("../models/Game");
 const Player  = require("../models/Player");
+const connectDB = require("../lib/mongodb");
 
 function generateCode(len = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -10,6 +11,7 @@ function generateCode(len = 6) {
 
 router.post("/create", async (req, res) => {
   try {
+    await connectDB();
     const { playerName, lobbyName, maxPlayers, totalRounds } = req.body;
     console.log("CREATE BODY:", req.body);
     if (!playerName || !lobbyName)
@@ -38,6 +40,7 @@ router.post("/create", async (req, res) => {
 
 router.post("/join", async (req, res) => {
   try {
+    await connectDB();
     const { playerName, code } = req.body;
     console.log("JOIN BODY:", req.body);
     if (!playerName || !code)
@@ -67,6 +70,7 @@ router.post("/join", async (req, res) => {
 
 router.get("/:code", async (req, res) => {
   try {
+    await connectDB();
     const game = await Game.findOne({ code: req.params.code.toUpperCase() })
       .populate("players", "name score role");
     if (!game) return res.status(404).json({ error: "Game not found" });
