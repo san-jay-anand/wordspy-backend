@@ -1,7 +1,7 @@
-const express  = require("express");
-const router   = express.Router();
-const Game     = require("../models/Game");
-const Player   = require("../models/Player");
+const express   = require("express");
+const router    = express.Router();
+const Game      = require("../models/Game");
+const Player    = require("../models/Player");
 const connectDB = require("../lib/mongodb");
 
 function generateCode(len = 6) {
@@ -13,18 +13,28 @@ router.post("/create", async (req, res) => {
   try {
     await connectDB();
     const { playerName, lobbyName, maxPlayers, totalRounds } = req.body;
+    console.log("CREATE BODY:", req.body);
+
     if (!playerName || !lobbyName)
       return res.status(400).json({ error: "playerName and lobbyName required" });
 
     let code, exists = true;
-    while (exists) { code = generateCode(); exists = await Game.findOne({ code }); }
+    while (exists) {
+      code = generateCode();
+      exists = await Game.findOne({ code });
+    }
 
     const player = await Player.create({ name: playerName.trim(), lobbyCode: code });
     const game   = await Game.create({
-      lobbyName: lobbyName.trim(), code,
-      maxPlayers: maxPlayers || 8, totalRounds: totalRounds || 3,
-      hostId: player._id, players: [player._id], status: "waiting",
+      lobbyName:   lobbyName.trim(),
+      code,
+      maxPlayers:  maxPlayers  || 8,
+      totalRounds: totalRounds || 3,
+      hostId:      player._id,
+      players:     [player._id],
+      status:      "waiting",
     });
+
     await game.populate("players", "name score role");
     res.status(201).json({ success: true, game, playerId: player._id });
   } catch (err) {
@@ -49,9 +59,6 @@ router.post("/join", async (req, res) => {
     game.players.push(player._id);
     await game.save();
     await game.populate("players", "name score role");
-
-    const io = req.app.get("io");
-    if (io) io.to(game.code).emit("lobbyUpdated", { game });
 
     res.json({ success: true, game, playerId: player._id });
   } catch (err) {
