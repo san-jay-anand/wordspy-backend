@@ -1,4 +1,3 @@
-// backend/routes/auth.js
 const express = require("express");
 const router  = express.Router();
 const jwt     = require("jsonwebtoken");
@@ -12,7 +11,6 @@ function generateToken(userId) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
 }
 
-// POST /api/auth/register
 router.post("/register", async (req, res) => {
   try {
     await connectDB();
@@ -31,15 +29,11 @@ router.post("/register", async (req, res) => {
     const token = generateToken(user._id);
 
     res.status(201).json({
-      success: true,
-      token,
+      success: true, token,
       user: {
-        _id:          user._id,
-        username:     user.username,
-        totalScore:   user.totalScore,
-        gamesPlayed:  user.gamesPlayed,
-        gamesWon:     user.gamesWon,
-        crewmateWins: user.crewmateWins,
+        _id: user._id, username: user.username,
+        totalScore: user.totalScore, gamesPlayed: user.gamesPlayed,
+        gamesWon: user.gamesWon, crewmateWins: user.crewmateWins,
         impostorWins: user.impostorWins,
       }
     });
@@ -49,7 +43,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// POST /api/auth/login
 router.post("/login", async (req, res) => {
   try {
     await connectDB();
@@ -65,15 +58,11 @@ router.post("/login", async (req, res) => {
 
     const token = generateToken(user._id);
     res.json({
-      success: true,
-      token,
+      success: true, token,
       user: {
-        _id:          user._id,
-        username:     user.username,
-        totalScore:   user.totalScore,
-        gamesPlayed:  user.gamesPlayed,
-        gamesWon:     user.gamesWon,
-        crewmateWins: user.crewmateWins,
+        _id: user._id, username: user.username,
+        totalScore: user.totalScore, gamesPlayed: user.gamesPlayed,
+        gamesWon: user.gamesWon, crewmateWins: user.crewmateWins,
         impostorWins: user.impostorWins,
       }
     });
@@ -83,7 +72,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// GET /api/auth/profile — get current user profile
 router.get("/profile", auth, async (req, res) => {
   try {
     await connectDB();
@@ -93,7 +81,6 @@ router.get("/profile", auth, async (req, res) => {
   }
 });
 
-// GET /api/auth/leaderboard — top 20 players
 router.get("/leaderboard", async (req, res) => {
   try {
     await connectDB();
@@ -107,7 +94,6 @@ router.get("/leaderboard", async (req, res) => {
   }
 });
 
-// POST /api/auth/update-stats — called after each game ends
 router.post("/update-stats", auth, async (req, res) => {
   try {
     await connectDB();
@@ -123,7 +109,6 @@ router.post("/update-stats", auth, async (req, res) => {
       else                     user.crewmateWins += 1;
     }
     await user.save();
-
     res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ error: err.message });
