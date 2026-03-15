@@ -1,7 +1,7 @@
-const express = require("express");
-const router  = express.Router();
-const Game    = require("../models/Game");
-const Player  = require("../models/Player");
+const express  = require("express");
+const router   = express.Router();
+const Game     = require("../models/Game");
+const Player   = require("../models/Player");
 const connectDB = require("../lib/mongodb");
 
 function generateCode(len = 6) {
@@ -13,7 +13,6 @@ router.post("/create", async (req, res) => {
   try {
     await connectDB();
     const { playerName, lobbyName, maxPlayers, totalRounds } = req.body;
-    console.log("CREATE BODY:", req.body);
     if (!playerName || !lobbyName)
       return res.status(400).json({ error: "playerName and lobbyName required" });
 
@@ -22,13 +21,9 @@ router.post("/create", async (req, res) => {
 
     const player = await Player.create({ name: playerName.trim(), lobbyCode: code });
     const game   = await Game.create({
-      lobbyName:   lobbyName.trim(),
-      code,
-      maxPlayers:  maxPlayers  || 8,
-      totalRounds: totalRounds || 3,
-      hostId:      player._id,
-      players:     [player._id],
-      status:      "waiting",
+      lobbyName: lobbyName.trim(), code,
+      maxPlayers: maxPlayers || 8, totalRounds: totalRounds || 3,
+      hostId: player._id, players: [player._id], status: "waiting",
     });
     await game.populate("players", "name score role");
     res.status(201).json({ success: true, game, playerId: player._id });
@@ -42,16 +37,13 @@ router.post("/join", async (req, res) => {
   try {
     await connectDB();
     const { playerName, code } = req.body;
-    console.log("JOIN BODY:", req.body);
     if (!playerName || !code)
       return res.status(400).json({ error: "playerName and code required" });
 
     const game = await Game.findOne({ code: code.toUpperCase().trim() });
-    console.log("FOUND GAME:", game ? game.code : "NOT FOUND", "STATUS:", game?.status);
-
-    if (!game)                                   return res.status(404).json({ error: "Room not found" });
-    if (game.status !== "waiting")               return res.status(400).json({ error: "Game already started" });
-    if (game.players.length >= game.maxPlayers)  return res.status(400).json({ error: "Room is full" });
+    if (!game)                                  return res.status(404).json({ error: "Room not found" });
+    if (game.status !== "waiting")              return res.status(400).json({ error: "Game already started" });
+    if (game.players.length >= game.maxPlayers) return res.status(400).json({ error: "Room is full" });
 
     const player = await Player.create({ name: playerName.trim(), lobbyCode: game.code });
     game.players.push(player._id);
@@ -59,7 +51,7 @@ router.post("/join", async (req, res) => {
     await game.populate("players", "name score role");
 
     const io = req.app.get("io");
-    io.to(game.code).emit("lobbyUpdated", { game });
+    if (io) io.to(game.code).emit("lobbyUpdated", { game });
 
     res.json({ success: true, game, playerId: player._id });
   } catch (err) {
