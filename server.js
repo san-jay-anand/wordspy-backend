@@ -290,4 +290,4 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
+httpServer.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`))
